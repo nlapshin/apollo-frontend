@@ -3,20 +3,31 @@
     <button v-on:click="runQuery">Run Query</button>
     <button v-on:click="runMutation">Run Mutation</button>
 
+    <br>
+
     <div>
       {{query}}
+    </div>
+
+    <br>
+
+    <div>
+      {{newAnimals}}
     </div>
     
   </div>
 </template>
 
 <script>
+import { watch, ref } from "vue";
 import gql from 'graphql-tag'
-import { useQuery, useMutation, useResult } from '@vue/apollo-composable'
+import { useQuery, useMutation, useSubscription, useResult } from '@vue/apollo-composable'
 
 export default {
   name: 'HelloWorld',
   setup () {
+    const newAnimals = ref([]);
+
     const { result, refetch: runQuery }  = useQuery(gql`
       query {
         animals {
@@ -26,6 +37,10 @@ export default {
         }
       }
     `)
+
+    // null, {
+    //   pollInterval: 2000
+    // }
 
     const query = useResult(result)
 
@@ -46,10 +61,31 @@ export default {
       }
     })
 
+    const { result: subs } = useSubscription(gql`
+      subscription animalAdded {
+        animalAdded {
+          id
+          name
+        }
+      }
+    `);
+
+    watch(
+      subs,
+      data => {
+        newAnimals.value.push(data.animalAdded)
+      },
+      {
+        lazy: true // Don't immediately execute handler
+      }
+    );
+
+
     return {
       query,
       runQuery,
-      runMutation
+      runMutation,
+      newAnimals
     }
   },
 }

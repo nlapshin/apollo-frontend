@@ -1,7 +1,6 @@
-
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client/core"
-import { onError } from "@apollo/client/link/error"
-import { logErrorMessages } from "@vue/apollo-util"
+import { ApolloClient, InMemoryCache, HttpLink, split } from "@apollo/client/core"
+import { WebSocketLink } from "@apollo/client/link/ws"
+import { getMainDefinition } from "@apollo/client/utilities";
 
 function getHeaders() {
     const headers = {
@@ -23,14 +22,21 @@ const httpLink = new HttpLink({
     },
 })
 
-const errorLink = onError((error) => {
-    if (process.env.NODE_ENV !== "production") {
-        logErrorMessages(error)
+const wsLink = new WebSocketLink({
+    uri: `ws://localhost:3010/graphql`,
+    options: {
+      reconnect: true
     }
-})
+  });
 
 // Create the apollo client
 export const apolloClient = new ApolloClient({
     cache: new InMemoryCache(),
-    link: errorLink.concat(httpLink),
+    link: split(({ query }) => {
+        const definition = getMainDefinition(query);
+        return (
+          definition.kind === "OperationDefinition" &&
+          definition.operation === "subscription"
+        );
+    }, wsLink, httpLink),
 })
