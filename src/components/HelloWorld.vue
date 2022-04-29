@@ -12,7 +12,7 @@
 
 <script>
 import gql from 'graphql-tag'
-import { useQuery, useResult } from '@vue/apollo-composable'
+import { useQuery, useMutation, useResult } from '@vue/apollo-composable'
 
 export default {
   name: 'HelloWorld',
@@ -29,9 +29,27 @@ export default {
 
     const query = useResult(result)
 
+    const { mutate: runMutation } = useMutation(gql`
+      mutation addAnimal($animal: AnimalInput!) {
+        addAnimalAsInput(animal: $animal) {
+          id
+        }
+      }
+    `, {
+      variables: {
+        "animal": {
+          "name": "test",
+          "type": "dog",
+          "age": 12,
+          "legs": 4
+        }
+      }
+    })
+
     return {
       query,
       runQuery,
+      runMutation
     }
   },
 }
