@@ -4,10 +4,12 @@ import { onError } from "@apollo/client/link/error"
 import { logErrorMessages } from "@vue/apollo-util"
 
 function getHeaders() {
-    const headers = {}
-    const token = window.localStorage.getItem("apollo-token")
+    const headers = {
+        'Content-Type': 'application/json'
+    }
+    const token = 'token'
     if (token) {
-        headers["Authorization"] = `Bearer ${token}`
+        headers["Authorization"] = `${token}`
     }
     return headers
 }
